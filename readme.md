@@ -29,8 +29,9 @@ conda create -n yolo_pt python=3.8
 pip install -r requirements.txt
 
 
-## training data 다운받기 
+## training 
 
+data 다운받기 
 ```
 cd dataset
 mkdir pistol
@@ -38,6 +39,12 @@ cd pistol
 
 curl -L "https://public.roboflow.ai/ds/WKkUorQ71T?key=wIBAdyawPa" > roboflow.zip; unzip roboflow.zip; rm roboflow.zip
 ```
+
+훈련시작
+```
+python train.py --img 416 --batch 16 --epochs 50 --data ../../dataset/pistol/data.yaml --cfg ./models/yolov5s.yaml --weights yolov5s.pt --name gun_yolov5s_results
+```
+
 
 ## 참고자료
 https://github.com/ultralytics/yolov5 
