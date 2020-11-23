@@ -1,3 +1,4 @@
+# PIL 로 이미지를 읽어 들여 감지 하는 예제 
 # %%
 # init module
 import time
@@ -46,32 +47,39 @@ print(names)
 # print(colors)
 # %%
 # init predict
-
-img0 = cv2.imread('./bus.jpg')  # BGR
-pred,_img = predict(model,img0,device,imgsz)
-
-print(img0.shape)
-print(_img.shape)
+img0 = Image.open('./bus.jpg') # PIL을 사용한 이미지 로딩 
+np_img = np.array(img0.copy())
+print(f'orginal size {np_img.shape}')
+pred,_img = predict(model,np_img,device,imgsz,scaling=True,colorFormat='rgb')
+print(f'resize  {_img.shape}')
 
 # %%
 result_img = img0.copy()
 for i, det in enumerate(pred):
-    # print(det)
-    # Rescale boxes from img_size to im0 size
-    det[:, :4] = scale_coords(_img.shape[2:], det[:, :4], img0.shape).round()
 
     for *xyxy, conf, cls in reversed(det):
         c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3]))
         print('%12s %.2f %.2f %.2f %.2f %.2f' % (names[int(cls)], conf,c1[0],c1[1],c2[0],c2[1]))
-        # print(c1,c2)
-        cv2.rectangle(result_img, c1, c2, (0,0,255), thickness=3, lineType=cv2.LINE_AA)
+
+        left = c1[0]
+        top = c1[1]
+        right = c2[0]
+        bottom = c2[1]
         
+        drawer = ImageDraw.Draw(result_img)
+        drawer.line([(left, top), (left, bottom), (right, bottom), (right, top),
+                   (left, top)],
+                  width=4,
+                  fill=(255,0,0))
         
     # Print results
     for c in det[:, -1].unique():
         n = (det[:, -1] == c).sum()  # detections per class
         print('%g %ss, ' % (n, names[int(c)]))
 
-display(Image.fromarray(cv2.cvtColor(result_img,cv2.COLOR_BGR2RGB)))
+# display(Image.fromarray(cv2.cvtColor(result_img,cv2.COLOR_BGR2RGB)))
+display(result_img)
+
+# %%
 
 # %%

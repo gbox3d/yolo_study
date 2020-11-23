@@ -51,14 +51,20 @@ def initModel(imgsz,map_location,weights_path) :
     return (model,imgsz)
 
 # init predict
-def predict(model,np_img,device,imgsz) :
+def predict(model,np_img,device,imgsz,scaling=False,colorFormat='bgr') :
     half = device.type != 'cpu'
+    # print(f'original size : {np_img.shape}')
     img, _ratio, _dsize = letterbox(np_img, new_shape=imgsz)
-    # print(_dsize, _ratio)
+    # print(f'resize : {img.shape}')
     # Convert
-    img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
+    if colorFormat == 'bgr':
+        img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
+        # img = np.ascontiguousarray(img)
+    else :
+        # img = img[:, :, ::-1].transpose(2, 0, 1)
+        img = img[:, :, ::1].transpose(2, 0, 1) # RGB 형식 그대로 유지한체로 차원 뒤집기 
+        
     img = np.ascontiguousarray(img)
-
     _img = torch.zeros((1, 3, imgsz, imgsz), device=device)  # init img
     # run once
     _ = model(_img.half() if half else _img) if device.type != 'cpu' else None
@@ -77,6 +83,11 @@ def predict(model,np_img,device,imgsz) :
 
     # Apply NMS
     pred = non_max_suppression(pred, 0.25, 0.45, classes=None, agnostic=False)
+
+    if scaling :
+        for i, det in enumerate(pred):
+            det[:, :4] = scale_coords(img.shape[2:], det[:, :4], np_img.shape).round()
+
 
     return (pred,img)
     # print(pred)
