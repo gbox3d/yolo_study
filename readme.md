@@ -45,6 +45,15 @@ curl -L "https://public.roboflow.ai/ds/WKkUorQ71T?key=wIBAdyawPa" > roboflow.zip
 python train.py --img 416 --batch 16 --epochs 50 --data ../../dataset/pistol/data.yaml --cfg ./models/yolov5s.yaml --weights yolov5s.pt --name gun_yolov5s_results
 ```
 
+테스트  
+test_conf.yaml 을 다음과 같이 작성한다.
+```yaml
+dataset_path : '/home/gbox3d/work/dataset/pistol/'
+model_path : '/home/gbox3d/work/visionApp/yolov5/runs/train/gun_yolov5s_results/weights/best.pt'
+test_index : 3
+```
+test_train.py를 실행시킨다.
+
 
 ## 참고자료
 https://github.com/ultralytics/yolov5 

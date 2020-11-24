@@ -16,7 +16,7 @@ from models.experimental import  Ensemble
 from utils.datasets import letterbox
 from utils.general import check_img_size, non_max_suppression, scale_coords
 # from utils.plots import plot_one_box
-# from utils.torch_utils import select_device
+from utils.torch_utils import select_device
 
 def load_model(weights, imgsz, map_location):
     model = Ensemble()
@@ -49,6 +49,19 @@ def initModel(imgsz,map_location,weights_path) :
 
     print('model load done')
     return (model,imgsz)
+
+def createModel(weights_path) : 
+    device = select_device()
+    print(f'device type : {device.type}')
+    model,imgsz = initModel(640,device,weights_path)
+
+    names = model.module.names if hasattr(model, 'module') else model.names
+    # colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
+    print(names)
+
+    return (model,imgsz,names,device)
+
+
 
 # init predict
 def predict(model,np_img,device,imgsz,scaling=False,colorFormat='bgr') :

@@ -4,14 +4,6 @@ import time
 from pathlib import Path
 
 import cv2
-import torch
-import torch.backends.cudnn as cudnn
-
-
-import numpy as np
-import torch.nn as nn
-
-from numpy import random
 
 from IPython.display import display
 import PIL.ImageFont as ImageFont
@@ -22,31 +14,17 @@ import PIL.Image as Image
 import sys
 sys.path.append('../libs')
 
-from yolov5_myutil import initModel,predict
-from utils.torch_utils import select_device
-from utils.general import scale_coords
+from yolov5_myutil import createModel,predict
 
 
 print('extention load complete')
-# %%
-# 연산장치 얻기 cpu 인지 gpu 인지 판단
-device = select_device()
-print(device.type)
 
 # %%
 # load model
-model,imgsz = initModel(640,device,'yolov5s.pt')
-
+model,imgsz,names,device = createModel('yolov5s.pt')
 
 # %%
-# Get names and colors
-names = model.module.names if hasattr(model, 'module') else model.names
-# colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
-print(names)
-# print(colors)
-# %%
-# init predict
-
+# do predict
 img0 = cv2.imread('./bus.jpg')  # BGR
 pred,_img = predict(model,img0,device,imgsz,scaling=True)
 
