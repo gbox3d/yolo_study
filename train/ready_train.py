@@ -1,7 +1,14 @@
 #%%
-#총이미지 갯수 카운트 
+#config data 
+import yaml
+with open(f'test_conf.yaml', 'r') as f:
+  config_data = yaml.load(f)
 
-dataset_path = '/home/gbox3d/work/dataset/pistol/'
+print(config_data)
+
+#%%
+#총이미지 갯수 카운트 
+dataset_path = config_data['dataset_path']
 
 from glob import glob
 img_list = glob(f'{dataset_path}export/images/*.jpg')
