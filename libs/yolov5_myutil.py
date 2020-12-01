@@ -64,7 +64,7 @@ def createModel(weights_path) :
 
 
 # init predict
-def predict(model,np_img,device,imgsz,scaling=False,colorFormat='bgr') :
+def predict(model,np_img,device,imgsz,scaling=False,colorFormat='bgr',_conf_thres=0.25,_iou_thres=0.45,_classes=None, _agnostic=False) :
     half = device.type != 'cpu'
     # print(f'original size : {np_img.shape}')
     img, _ratio, _dsize = letterbox(np_img, new_shape=imgsz)
@@ -95,7 +95,7 @@ def predict(model,np_img,device,imgsz,scaling=False,colorFormat='bgr') :
     pred = model(img, augment=False)[0]
 
     # Apply NMS
-    pred = non_max_suppression(pred, 0.25, 0.45, classes=None, agnostic=False)
+    pred = non_max_suppression(pred, conf_thres = _conf_thres, iou_thres=_iou_thres, classes=_classes, agnostic=_agnostic)
 
     if scaling :
         for i, det in enumerate(pred):
