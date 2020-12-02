@@ -53,3 +53,7 @@ for i, det in enumerate(pred):
 display(Image.fromarray(cv2.cvtColor(result_img,cv2.COLOR_BGR2RGB)))
 
 # %%
+
+for *xyxy, conf, cls in reversed(det):
+        c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3]))
+        print('%12s %.2f %.2f %.2f %.2f %.2f' % (names[int(cls)], conf,c1[0],c1[1],c2[0],c2[1]))

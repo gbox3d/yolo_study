@@ -36,7 +36,7 @@ print(device.type)
 
 # %%
 # load model
-model,imgsz = initModel(640,device,'yolov5s.pt')
+model,imgsz = initModel(640,device,'../yolov5s.pt')
 
 
 # %%
@@ -79,7 +79,3 @@ for i, det in enumerate(pred):
 
 # display(Image.fromarray(cv2.cvtColor(result_img,cv2.COLOR_BGR2RGB)))
 display(result_img)
-
-# %%
-
-# %%
