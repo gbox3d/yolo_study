@@ -26,12 +26,20 @@ conda create -n yolo_pt python=3.8
 ```
 
 ## 모듈 설치 
+```
 pip install -r requirements.txt
+```
+
+## 가중치 파일 다운받기
+```
+cd models
+./download_weights.sh
+```
 
 
 ## training 
 
-data 다운받기 
+예제 data set 다운받기 
 ```
 cd dataset
 mkdir pistol

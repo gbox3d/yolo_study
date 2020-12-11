@@ -36,7 +36,7 @@ print(device.type)
 
 # %%
 # load model
-model,imgsz = initModel(640,device,'../yolov5s.pt')
+model,imgsz = initModel(640,device,'../models/yolov5s.pt')
 
 
 # %%
