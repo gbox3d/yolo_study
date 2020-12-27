@@ -19,6 +19,7 @@ img_size = 640
 parser = argparse.ArgumentParser()
 parser.add_argument('--src-path', type=str, default='./', help='source data path')
 parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
+parser.add_argument('--rotation', type=int, default=0, help='inference size (pixels)')
 
 opt = parser.parse_args()
 # print(opt)
@@ -53,7 +54,15 @@ for _filePath in image_files :
         _ratio =  _img.width /_img.height
         rsz_img = _img.resize( ( int(img_size*_ratio),img_size ),Image.ANTIALIAS )
 
-    rsz_img = rsz_img.transpose(Image.ROTATE_270)
+    if opt.rotation == 270 : 
+        rsz_img = rsz_img.transpose(Image.ROTATE_270)
+    elif opt.rotation == 90 :
+        rsz_img = rsz_img.transpose(Image.ROTATE_90)
+    elif opt.rotation == 180 :
+        rsz_img = rsz_img.transpose(Image.ROTATE_180)
+    else :
+        print('rotation only 90,180,270')
+
     rsz_img.save( f'{output_dir}/{_fname}')
     print(f'save : {_fname},{rsz_img.size}')
 
