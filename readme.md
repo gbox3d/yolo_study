@@ -2,12 +2,20 @@
 
 ## 필수 모듈 설치 
 
-```
+```sh
+#우분투의경우 반드시 제일 먼저 설치한다.
 sudo apt install liblzma-dev
 
 pip install sklearn
 
 ```
+
+* 라즈베리파이  
+```sh
+pip3 install PyYAML scipy tqdm numpy
+
+```
+
 
 ## 가상 환경 셋업
 
