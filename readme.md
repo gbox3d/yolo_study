@@ -1,16 +1,17 @@
 # yolo v5 tutorial for pytorch
 
+modules/yolov5의 내용은 ultralytics yolov5의 저장소에 있는 utils,models 를 그대로 카피해서 사용함(21.10.26)  
+yl5Detector : prediction용 핼퍼클래스    
 ## 필수 모듈 설치 
 
 ```sh
 #우분투의경우 반드시 제일 먼저 설치한다.
 sudo apt install liblzma-dev
-
 pip install sklearn
 
 ```
 
-* 라즈베리파이  
+*라즈베리파이*
 ```sh
 pip3 install PyYAML scipy tqdm numpy
 
@@ -19,20 +20,11 @@ pip3 install PyYAML scipy tqdm numpy
 
 ## 가상 환경 셋업
 
-pyenv, conda둘중 하나를 선택할수있다.
-### pyenv 
-```
-sudo apt install liblzma-dev # 우분투에서 설치안되어있다면
-pyenv install 3.8.6 # (만약 파이썬 버전이 없다면)
-pyenv virtualenv 3.8.6 yolov5_pt
+anaconda 환경을 먼저 설치해주고 가상 환경을 생성한다.
 
-```
-
-### ananconda
 ```
 conda create -n yolo_pt python=3.8
 ```
-
 ## 모듈 설치 
 ```
 pip install -r requirements.txt
