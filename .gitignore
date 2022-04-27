@@ -3,3 +3,4 @@ __pycache__/
 train/test_conf.yaml
 models/*.yaml
 weights/
+res/
