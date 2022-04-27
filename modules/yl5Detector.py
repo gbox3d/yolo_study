@@ -20,13 +20,13 @@ import PIL.Image as Image
 import sys
 
 # sys.path.append("./")
-sys.path.append("./modules/yolov5")
+sys.path.append("../yolov5")
 
 
-from modules.yolov5.utils.datasets import letterbox
-from modules.yolov5.models.experimental import attempt_load
-from modules.yolov5.utils.general import check_img_size,non_max_suppression,scale_coords,set_logging
-from modules.yolov5.utils.torch_utils import select_device
+from utils.datasets import letterbox
+from models.experimental import attempt_load
+from utils.general import check_img_size,non_max_suppression,scale_coords,set_logging
+from utils.torch_utils import select_device
 
 class yl5Detector:
     def __init__(self,weights, imgsz , device,logging=True):

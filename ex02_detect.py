@@ -23,7 +23,7 @@ from modules.yl5Detector import yl5Detector
 print('extention load complete')
 #%%
 weight_path = './yolov5s.pt'
-_detectorObj = yl5Detector(weight_path,640,'')
+_detectorObj = yl5Detector(weight_path,640,'',logging=False)
 detector_device = _detectorObj.device
 detector_device_type = str(_detectorObj.device)
 detector_label_names = _detectorObj.names
