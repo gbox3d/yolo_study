@@ -4,3 +4,4 @@ train/test_conf.yaml
 models/*.yaml
 weights/
 res/
+runs/
