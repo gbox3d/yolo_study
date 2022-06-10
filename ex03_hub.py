@@ -14,7 +14,7 @@ import numpy as np
 model = torch.hub.load(
    '../yolov5', # 저장소 위치
    'custom' , # 커스텀 웨이트 파일 사용
-   './yolov5s.pt',
+   './weights/yolov5s.pt',
    source='local' # 로컬 저장소 사용
    )
 #    pretrained=True)
@@ -40,8 +40,11 @@ results.save()  # or .show() 결과 이미지 저장
 
 results.xyxy[0]  # img1 predictions (tensor)
 results.pandas().xyxy[0]  # img1 predictions (pandas)
-#%% json results
+
+#%% json results string
 result_json = results.pandas().xyxy[0].to_json(orient="records") 
+print(result_json)
+
 #%% cv2 로 이미지 처리 
 img = cv2.imread(imgs[0])  # BGR -> RGB
 result_img = img.copy()
@@ -76,3 +79,5 @@ with open(imgs[0], "rb") as fd:
     display(_img)
         
     
+
+# %%
