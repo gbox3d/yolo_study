@@ -20,8 +20,6 @@ model = torch.hub.load(
 #    pretrained=True)
 
 #%% Images
-imgs = ['./bus.jpg']  # batch of images
-
 model.conf = 0.5  # NMS confidence threshold
 model.iou = 0.2  # NMS IoU threshold
 model.agnostic = False  # NMS class-agnostic
@@ -30,10 +28,32 @@ model.classes = None  # (optional list) filter by class, i.e. = [0, 15, 16] for 
 model.max_det = 1000  # maximum number of detections per image
 model.amp = False  # Automatic Mixed Precision (AMP) inference
 
-# model.cpu() 
-# Inference
+# Inference from various sources. For height=640, width=1280, RGB images example inputs are:
+        #   file:       imgs = 'data/images/zidane.jpg'  # str or PosixPath
+        #   URI:             = 'https://ultralytics.com/images/zidane.jpg'
+        #   OpenCV:          = cv2.imread('image.jpg')[:,:,::-1]  # HWC BGR to RGB x(640,1280,3)
+        #   PIL:             = Image.open('image.jpg') or ImageGrab.grab()  # HWC x(640,1280,3)
+        #   numpy:           = np.zeros((640,1280,3))  # HWC
+        #   torch:           = torch.zeros(16,3,320,640)  # BCHW (scaled to size=640, 0-1 values)
+        #   multiple:        = [Image.open('image1.jpg'), Image.open('image2.jpg'), ...]  # list of images
+
+#%% Inference files
+imgs = ['./bus.jpg']  # batch of images
+
+#%% Inference from files
 results = model(imgs)
 
+#%% Inference from opencv 
+results = model(cv2.imread(imgs[0])[:,:,::-1])
+
+#%% Inference from PIL
+with open(imgs[0], "rb") as fd:
+    img_data = fd.read()
+    np_img = np.array(Image.open(io.BytesIO(img_data))) # PIL을 사용한 이미지 로딩
+    results = model(np_img)
+
+
+#%%
 # Results
 results.print()
 results.save()  # or .show() 결과 이미지 저장
