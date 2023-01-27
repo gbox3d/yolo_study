@@ -5,3 +5,4 @@ models/*.yaml
 weights/
 res/
 runs/
+datasets/
