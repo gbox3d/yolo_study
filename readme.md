@@ -27,6 +27,8 @@ yolo detect train data=./madang.yaml model=yolov8n.yaml epochs=1000 imgsz=640 ba
 yolo segment train data=data.yaml model=yolov8n-seg.yaml epochs=100 imgsz=640 batch=64 patience=200  pretrained=yolov8n-seg.pt
 yolo segment train data=data.yaml model=yolov8s-seg.yaml epochs=100 imgsz=640 batch=32 patience=200  pretrained=yolov8s-seg.pt
 yolo segment train data=data.yaml model=yolov8s-seg.yaml epochs=100 imgsz=640 batch=16 patience=200  pretrained=yolov8s-seg.pt
+yolo segment train data=data.yaml model=yolov8s-seg.yaml epochs=100 imgsz=640 batch=16 patience=200  pretrained=yolov8s-seg.pt
+yolo segment train data=data.yaml model=yolov8x-seg.yaml epochs=1000 imgsz=640 batch=4 patience=200
 ```
 
 
