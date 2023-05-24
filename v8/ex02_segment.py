@@ -1,5 +1,5 @@
 #%%
-import cv2
+import cv2 as cv
 import numpy as np
 
 from IPython.display import display
@@ -36,7 +36,7 @@ def result_to_json(result: Results, tracker=None):
     ]
     if result.masks is not None:
         for idx in range(len_results):
-            result_list_json[idx]['mask'] = cv2.resize(result.masks.data[idx].cpu().numpy(), (result.orig_shape[1], result.orig_shape[0])).tolist()
+            result_list_json[idx]['mask'] = cv.resize(result.masks.data[idx].cpu().numpy(), (result.orig_shape[1], result.orig_shape[0])).tolist()
             result_list_json[idx]['segments'] = result.masks.segments[idx].tolist()
     if tracker is not None:
         bbs = [
@@ -59,7 +59,7 @@ def result_to_json(result: Results, tracker=None):
     return result_list_json
 
 #%%
-img = cv2.imread("bus.jpg")
+img = cv.imread("bus.jpg")
 model = YOLO("yolov8n-seg.pt")  
 results = model.predict(img, conf=0.5, iou=0.7, classes=None)
 
@@ -79,12 +79,12 @@ for box in result.boxes:
     x,y,w,h = box.xywh[0]
     print(f'x: {x.item()} y: {y.item()} w: {w.item()} h: {h.item()}')
     
-    cv2.rectangle(_img,(int(x1),int(y1)),(int(x2),int(y2)),(0,255,0),2)
+    cv.rectangle(_img,(int(x1),int(y1)),(int(x2),int(y2)),(0,255,0),2)
     
     print(f'class : {int(box.cls)}')
     print(f'conf : {box.conf.item()}')
     
-display(Image.fromarray(cv2.cvtColor(_img, cv2.COLOR_BGR2RGB)))
+display(Image.fromarray(cv.cvtColor(_img, cv.COLOR_BGR2RGB)))
 
 
 # %%
@@ -98,7 +98,7 @@ print(result.masks.data)
 for _mask_data in result.masks.data:
     mask_img = _mask_data.cpu().numpy()
     mask_img = np.where(mask_img > 0.5, 255, 0).astype('uint8')  # 0.5 이상인 값을 255로 바꾸고, uint8로 변경
-    display(Image.fromarray(cv2.cvtColor(mask_img, cv2.COLOR_BGR2RGB)))
+    display(Image.fromarray(cv.cvtColor(mask_img, cv.COLOR_BGR2RGB)))
     
 #%% segment 정보
 _seg_img = result.orig_img.copy()
@@ -107,8 +107,8 @@ img_h, img_w, _ = _seg_img.shape
 for _segment in result.masks.segments:
     # 좌표값을 이미지 크기에 맞게 정수형으로 변환
     np_cnt = (_segment * [img_w,img_h]).astype(np.int32)    
-    cv2.polylines(_seg_img, [np_cnt], True, (0, 255, 0), 2)
+    cv.polylines(_seg_img, [np_cnt], True, (0, 255, 0), 2)
 
-display(Image.fromarray(cv2.cvtColor(_seg_img, cv2.COLOR_BGR2RGB)))
+display(Image.fromarray(cv.cvtColor(_seg_img, cv.COLOR_BGR2RGB)))
     
 # %%
