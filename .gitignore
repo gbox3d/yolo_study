@@ -10,3 +10,4 @@ trainer/
 trainer.txt
 *.mp4
 *.jpg
+datasets/
