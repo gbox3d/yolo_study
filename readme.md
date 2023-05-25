@@ -3,10 +3,10 @@
 
 **강의문의 : gbox3d@gmail.com**    
 
-## 실슷용 데이터셋 받는 방법
+## 실습용 데이터셋 받는 방법
 
 ```bash
-mk dir datasets
+mkdir datasets
 cd datasets
 wget https://ultralytics.com/assets/coco128.zip
 wget https://raw.githubusercontent.com/ultralytics/ultralytics/main/ultralytics/datasets/coco128.yaml
