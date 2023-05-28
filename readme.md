@@ -1,7 +1,16 @@
 # YOLO study 
 영상인식AI 개발자 양성과정 YOLO 강의 교재  
 
-**강의문의 : gbox3d@gmail.com**    
+**강의문의 : gbox3d@gmail.com**   
+
+
+## 개발경 설치
+
+```bash
+
+pip install opencv-contrib-python
+
+```
 
 ## 실습용 데이터셋 받는 방법
 
