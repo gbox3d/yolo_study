@@ -52,23 +52,27 @@ yolov8.yaml 파일은 모델의 구성을 정의 하는 파일이다.
 ## dataset 정의 파일
 
 훈련실행시에 data 파라메터에 정의하는 파일이다.  
-coco128.yaml 은 데이터셋의 구성을 정의하는 대표적인 예제 파일이다.
+coco.yaml 은 데이터셋의 구성을 정의하는 대표적인 예제 파일이다.
 
 ```yaml
-path: ../datasets/coco128  # dataset root dir
-train: images/train2017  # train images (relative to 'path') 128 images
-val: images/train2017  # val images (relative to 'path') 128 images
-test:  # test images (optional)
+path: ../datasets/coco  # dataset root dir
+train: train.txt  # train images (relative to 'path') 
+val: val.txt   # val images (relative to 'path')
+test:  test.txt # test images (relative to 'path')
 ```
 path는 데이터셋의 루트 디렉토리를 의미한다.  
-train은 학습데이터셋의 이미지가 있는 디렉토리를 의미한다. 라벨은 labels 디렉토리의 같은 이름의 디랙토리에 같은 이름의 파일로 저장된다.  
+train은 학습데이터셋의 이미지가 있는 디렉토리 또는 리스트가 담겨있는 파일을 정의한다.  
 
-다음과 같은 구성을 가진다.
+train.txt 파일은 다음과 같은 구성을 가진다.  
 ```txt
-images/train2017/000000000139.jpg
-labels/train2017/000000000139.txt
+./images/000000000139.jpg
+./images/000000000285.jpg
+./images/000000000632.jpg
+....
 ```
 
+라벨은 labels 디렉토리의 같은 이름의 디랙토리에 같은 이름의 파일로 저장된다.   
+이렇게 하면 라벨파일은 ./images/000000000139.jpg 의 경우에는 ./labels/000000000139.txt 로 매칭된다.  
 
 ## 참고자료
 https://github.com/ultralytics/ultralytics
