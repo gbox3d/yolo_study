@@ -13,6 +13,10 @@ from ultralytics import YOLO,checks
 checks()
 # %%
 model = YOLO('yolov8n.pt')  # load a pretrained YOLOv8n detection model
+#%%
+
+model.info()
+model.names
 
 #%%
 im = cv.imread('./bus.jpg')
@@ -32,3 +36,10 @@ for result in results:
         print(box.conf)
 display(Image.fromarray(cv.cvtColor(result_img, cv.COLOR_BGR2RGB)))
 #%%
+_boxes = results[0].boxes.data.cpu().detach().numpy()
+
+for box in _boxes:
+    print(box)
+    
+    
+# %%
