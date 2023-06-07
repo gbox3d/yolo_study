@@ -28,7 +28,7 @@ for result in results:
         cv.rectangle(result_img,(int(x1),int(y1)),(int(x2),int(y2)),(0,255,0),2)
         print(box.xyxy)
         print(box.xywh)
-        print(box.cls)
-        print(box.conf)
+        print(f'class : {int(box.cls.cpu().item())}' )
+        print(f'conf : {int(box.conf.cpu().item()*100)}%' )
 display(Image.fromarray(cv.cvtColor(result_img, cv.COLOR_BGR2RGB)))
 #%%
