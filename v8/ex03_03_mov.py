@@ -14,9 +14,9 @@ import PIL.Image as Image
 checks()
 #%%
 # Load a model
-model = YOLO('yolov8m-pose.pt')  # load an official model
+model = YOLO('yolov8n-pose.pt')  # load an official model
 #%% load mp4
-cap = cv.VideoCapture('../ive_iam01_480p.mp4')
+cap = cv.VideoCapture('../iam_tuto_shorts_480p.mp4')
 total_framecount = int(cap.get(cv.CAP_PROP_FRAME_COUNT)) # 전체 프레임 구하기 
 
 print(f'total frame count {total_framecount}')
@@ -32,6 +32,8 @@ if cap.isOpened() :
         # Run YOLOv8 inference on the frame
         results = model(frame, conf=0.5,verbose=False)  # predict on an image
         
+        org_frame = frame.copy()
+        
         for det in results:
             for kpts in det.keypoints.data:
                 # Each keypoint is a 2D tensor
@@ -42,6 +44,7 @@ if cap.isOpened() :
         cv.putText(frame, f"frame :{frame_index} / {total_framecount}", (10, 50), cv.FONT_HERSHEY_COMPLEX, 1.2, (255, 0, 255), 1, cv.LINE_AA) 
         
         cv.imshow('frame',frame)
+        cv.imshow('org_frame',org_frame)
         
         
         

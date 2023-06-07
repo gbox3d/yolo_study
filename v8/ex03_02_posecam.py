@@ -42,7 +42,7 @@ while cap.isOpened():
         cv.putText(frame, "FPS :"+str(int(fps)), (10, 50), cv.FONT_HERSHEY_COMPLEX, 1.2, (255, 0, 255), 1, cv.LINE_AA)
         
         # Display the annotated frame
-        cv.imshow("YOLOv8 Inference", frame)
+        cv.imshow("posecamTest", frame)
         
         # Break the loop if 'q' is pressed
         if cv.waitKey(1) & 0xFF == ord('q'):
