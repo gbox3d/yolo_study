@@ -24,6 +24,8 @@ results = model(source=im,conf=0.5)  # predict on an image
 
 # %%
 result_img = im.copy()
+# Load class names
+class_names = model.names
 
 for result in results:
     boxes = result.boxes
