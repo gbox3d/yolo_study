@@ -16,7 +16,7 @@ checks()
 # Load a model
 model = YOLO('yolov8n-pose.pt')  # load an official model
 #%%
-im = cv.imread('./bus.jpg')
+im = cv.imread('bus.jpg')
 results = model(source=im,conf=0.5)  # predict on an image
 
 #%%
@@ -42,3 +42,16 @@ for res in results:
             cv.circle(result_img, (x, y), 5, (0, 0, 255), -1)
 display(Image.fromarray( cv.cvtColor(result_img, cv.COLOR_BGR2RGB)))        
 # %%
+print(results[0].keypoints[0].xyn.numpy())
+print(results[0].keypoints[0].xyn.numpy().shape)
+
+#%%
+print(results[0].orig_img.shape)
+# %%
+np_keypoint = results[0].keypoints[0].xyn.numpy()
+print(np_keypoint[0][9])
+
+screen_pos_x, screen_pos_y = map(int, np_keypoint[0][9])
+
+# %%
+
