@@ -27,3 +27,24 @@ unzip coco128.zip
 ```bash
 python yolo_format_test.py --basepath /home/gbox3d/work/dataset/test/ --imageFile 150759820_900615604088631_2924655063235727439_n.jpg --data ./datasets/coco128.yaml
 ```
+
+##  launch.json 설정
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "blackApp",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/cenglass/app_black.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/cenglass/"
+            
+        },
+        
+    ]
+}
+```

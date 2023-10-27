@@ -10,5 +10,7 @@ trainer/
 trainer.txt
 *.mp4
 *.jpg
+!bus.jpg
 datasets/
 output/
+.env
