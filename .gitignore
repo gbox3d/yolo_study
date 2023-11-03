@@ -11,6 +11,8 @@ trainer.txt
 *.mp4
 *.jpg
 !bus.jpg
+!cocokey2017.jpg
+!cocokey2018.jpg
 datasets/
 output/
 .env
