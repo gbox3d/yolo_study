@@ -1,5 +1,6 @@
 *.pt
 __pycache__/
+.DS_Store
 train/test_conf.yaml
 models/*.yaml
 weights/
