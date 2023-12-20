@@ -12,3 +12,4 @@ trainer.txt
 *.jpg
 datasets/
 output/
+*.pt

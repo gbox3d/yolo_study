@@ -14,13 +14,14 @@ import PIL.Image as Image
 checks()
 #%%
 # Load a model
-model = YOLO('yolov8n-pose.pt')  # load an official model
+model = YOLO('yolov8s-pose.pt')  # load an official model
 #%%
-im = cv.imread('./bus.jpg')
+im = cv.imread('./soccer_4.jpg')
 results = model(source=im,conf=0.5)  # predict on an image
 
 #%%
-print(results)
+for index,result in enumerate(results):
+    print(f'result {index} :  Found {len(result)} detection(s)')
 # %%
 # Make a copy of the original image to draw bounding boxes and keypoints on
 result_img = im.copy()
