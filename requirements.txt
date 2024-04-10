@@ -1,0 +1,8 @@
+opencv-contrib-python
+scikit-learn
+scipy
+pygame
+python-dotenv
+pyrealsense2
+ultralytics
+tk

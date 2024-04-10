@@ -4,11 +4,14 @@
 **강의문의 : gbox3d@gmail.com**   
 
 
-## 개발경 설치
+## 개발환경 설치
 
 ```bash
 
+pip install msvc-runtime # window
+
 pip install opencv-contrib-python
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 ```
 
