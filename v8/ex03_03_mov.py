@@ -16,7 +16,7 @@ checks()
 # Load a model
 model = YOLO('yolov8n-pose.pt')  # load an official model
 #%% load mp4
-cap = cv.VideoCapture('../iam_tuto_shorts_480p.mp4')
+cap = cv.VideoCapture('../1.mp4')
 total_framecount = int(cap.get(cv.CAP_PROP_FRAME_COUNT)) # 전체 프레임 구하기 
 
 print(f'total frame count {total_framecount}')
