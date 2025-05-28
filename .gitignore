@@ -18,3 +18,4 @@ datasets/
 output/
 .env
 .venv/
+*.png
