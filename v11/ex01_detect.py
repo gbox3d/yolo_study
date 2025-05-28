@@ -1,7 +1,7 @@
 #%%
 import cv2 as cv
 
-from IPython.display import display
+from IPython.display import display # pip install IPython
 import PIL.ImageFont as ImageFont
 import PIL.ImageDraw as ImageDraw
 import PIL.ImageColor as ImageColor
@@ -12,7 +12,7 @@ from ultralytics import YOLO,checks
 
 checks()
 # %%
-model = YOLO('yolo11n.pt')  # load a pretrained YOLOv8n detection model
+model = YOLO('yolo11n.pt')  
 #%%
 
 model.info()
