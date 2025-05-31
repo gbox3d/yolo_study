@@ -9,6 +9,8 @@ model = SAM("sam2_s.pt")
 
 # 2) 카메라 열기
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)  # 너비 설정
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480) # 높이 설정
 if not cap.isOpened():
     print("카메라를 열 수 없습니다.")
     sys.exit()
