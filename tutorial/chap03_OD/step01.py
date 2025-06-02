@@ -1,72 +1,89 @@
-import cv2
 import pygame
-import sys
-from ultralytics import YOLO, checks
+import cv2
+
+from ultralytics import YOLO,checks
 
 checks()
 
-# 1) OpenCV 카메라 열기
-cap = cv2.VideoCapture(0)
-if not cap.isOpened():
-    print("카메라를 열 수 없습니다.")
-    sys.exit()
+# screen dimensions
+width, height = 640, 480
 
-# 2) Pygame 초기화
+#pygame initialization
 pygame.init()
-width, height = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-screen = pygame.display.set_mode((width, height))
+screen_surface = pygame.display.set_mode((width, height))
 
+clock = pygame.time.Clock()
+font = pygame.font.SysFont(None,24)
+
+#Yolo model initialization
 model = YOLO("yolo11n.pt")
-font = pygame.font.SysFont(None, 14)
 
-# 3) 프레임 읽어 Pygame에 표시
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
-    
-    # YOLO 예측 (NMS 포함). imgsz, conf 등은 필요에 따라 조절
-    results = model(frame, conf=0.5, verbose=False)  
+#load image
+frame = cv2.imread("tutorial/chap03_OD/bus.jpg")
 
-    # BGR(OpenCV) → RGB(Pygame) 변환
-    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    # Pygame Surface로 변환
-    surface = pygame.surfarray.make_surface(frame_rgb.swapaxes(0, 1)) # OpenCV의 행렬을 Pygame Surface로 변환
-    screen.blit(surface, (0, 0)) # 화면에 프레임 표시
+# resize the image to fit the screen dimensions 
+orig_h, orig_w = frame.shape[:2]
+
+# Target dimensions (your screen dimensions)
+target_w = width
+target_h = height
+
+# Calculate the scaling ratio for width and height
+ratio_w = target_w / orig_w
+ratio_h = target_h / orig_h
+
+# Choose the smaller scaling ratio to ensure the image fits
+# within the target dimensions while maintaining aspect ratio
+scale_ratio = min(ratio_w, ratio_h)
+
+# Calculate the new dimensions based on the chosen scale_ratio
+new_w = int(orig_w * scale_ratio)
+new_h = int(orig_h * scale_ratio)
+
+# Resize the image using the new dimensions and INTER_AREA for shrinking
+frame = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
+# Check if the image was loaded successfully
+if frame is None:
+    print("Error: Could not read image.")
+    exit()
+# Run inference on the image
+results = model(frame,conf=0.7,verbose=False)
+
+
+# render the image in pygame
+frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+# Convert OpenCV image to Pygame surface
+frame_surface = pygame.surfarray.make_surface(frame_rgb.swapaxes(0, 1))
+# Blit the surface to the screen
+screen_surface.blit(frame_surface, (0, 0))
+
+# Draw bounding boxes and labels
+for result in results :
+    boxes = result.boxes
+    for box in boxes:
+        x1, y1, x2, y2 = map(int, box.xyxy[0])
+        conf = int(box.conf * 100)
+        cls = int(box.cls)
+        label = f"{model.names[cls]} {conf}%"
+        pygame.draw.rect(screen_surface, (0, 255, 0), (x1, y1, x2 - x1, y2 - y1), 2)
+        text_surface = font.render(label, True, (255, 0, 0))
+        screen_surface.blit(text_surface, (x1, y1 - 20))
+
+# Update the display
+pygame.display.flip()
+
+bLoop = True
+while bLoop:    
+    clock.tick(30) # prevent high CPU usage
     
-    text_surf = font.render("Press ESC to quit", True, (255,255,255))
-    screen.blit(text_surf, (10,10))
-    
-    
-    for r in results:
-        for box in r.boxes:
-            x1, y1, x2, y2 = map(int, box.xyxy[0])      # bbox
-            cls_id = int(box.cls)                       # 클래스 번호
-            cls_name = model.names[cls_id]              # 클래스명
-            conf = box.conf.item() * 100                # 신뢰도 (%)
+    # evenet handling
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            bLoop = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                bLoop = False
             
-            # 바운딩 박스
-            pygame.draw.rect(screen, (0, 255, 0), (x1, y1, x2-x1, y2-y1), 2)
-
-            # 레이블 배경 사각형
-            label = f"{cls_name} {conf:.0f}%"
-            text_surf = font.render(label, True, (0, 0, 0))
-            tw, th = text_surf.get_size()
-            pygame.draw.rect(screen, (0, 255, 0), (x1, y1 - th - 2, tw + 4, th + 2))
-            screen.blit(text_surf, (x1 + 2, y1 - th))
-    
-    
-    
-    pygame.display.flip() # 
-
-    # Quit 이벤트 처리
-    for e in pygame.event.get():
-        if e.type == pygame.QUIT:
-            cap.release()
-            pygame.quit()
-            sys.exit()
-        elif e.type == pygame.KEYDOWN:
-            if e.key == pygame.K_ESCAPE: # ESC 키로 종료
-                cap.release()
-                pygame.quit()
-                sys.exit()
+pygame.quit()
+print("exit successfully")

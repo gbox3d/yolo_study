@@ -17,8 +17,14 @@ font = pygame.font.SysFont(None, 24) # 기본 폰트
 
 # OpenCV 카메라 열기
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)  # 너비 설정
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480) # 높이 설정
+
+
 if not cap.isOpened():
     print("카메라 열기 실패"); sys.exit()
+    
+    
 
 # 클릭 위치를 저장할 리스트
 click_points = []
