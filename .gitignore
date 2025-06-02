@@ -19,3 +19,6 @@ output/
 .env
 .venv/
 *.png
+datasets/
+.vscode/
+config.yaml
