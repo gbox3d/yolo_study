@@ -2,12 +2,15 @@ import pygame
 import sys
 import cv2
 
+
+width, height = 640, 480
+
 # 1) Pygame 초기화
 pygame.init()
 
 # 2) 화면 생성 (640×480, 더블 버퍼링)
 screen = pygame.display.set_mode(
-    (640, 480),
+    (width, height),
     pygame.DOUBLEBUF
 )
 pygame.display.set_caption("Step 01: 초기화와 Surface")
@@ -17,12 +20,19 @@ font = pygame.font.SysFont(None, 24) # 기본 폰트
 
 # OpenCV 카메라 열기
 cap = cv2.VideoCapture(0)
+
+# 해상도 설정
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+
+# 카메라가 열렸는지 확인
 if not cap.isOpened():
     print("카메라 열기 실패"); sys.exit()
 
 while True: 
    
     # 1) 화면 클리어 → 뒷버퍼 준비
+
     
     ret, frame = cap.read()
     if not ret: break
