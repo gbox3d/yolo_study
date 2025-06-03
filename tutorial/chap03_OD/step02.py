@@ -53,6 +53,14 @@ while True:
             pygame.draw.rect(screen_surface, (0, 255, 0), (x1, y1, x2 - x1, y2 - y1), 2)
             text_surface = font.render(label, True, (255, 0, 0))
             screen_surface.blit(text_surface, (x1, y1 - 20))
+    
+    
+    # FPS display
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    fps_text = font.render(f"FPS: {fps:.2f}", True, (0, 0, 255))
+    screen_surface.blit(fps_text, (10, 10))
+    
+    
     pygame.display.flip()
     
     clock.tick(30) # prevent high CPU usage
