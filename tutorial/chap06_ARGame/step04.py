@@ -18,7 +18,7 @@ except Exception as e:
     print(f"또는 PyTorch 버전과 CUDA 가용성을 확인해주세요.")
     sys.exit()
 
-# 2) 비디오 파일 열기
+# 2) opencv 비디오 캡처 설정
 # VIDEO_PATH = "tutorial/chap06_ARGame/by_drone.mp4"
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
@@ -39,7 +39,6 @@ h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 screen = pygame.display.set_mode((w, h))
 pygame.display.set_caption("SAM 객체 선택 및 CSRT 추적")
 clock = pygame.time.Clock()
-
 font = pygame.font.SysFont(None,24)
 
 
