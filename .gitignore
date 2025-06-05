@@ -7,8 +7,6 @@ weights/
 res/
 runs/
 datasets/
-trainer/
-trainer.txt
 *.mp4
 *.jpg
 !bus.jpg
