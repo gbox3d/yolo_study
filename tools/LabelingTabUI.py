@@ -5,6 +5,8 @@ from PIL import Image, ImageTk
 import os
 import numpy as np
 
+import threading
+
 from SegmentationProcessor import SegmentationProcessor
 from LabelManager import LabelManager 
 from VideoFrameRenderer import VideoFrameRenderer
@@ -54,10 +56,15 @@ class LabelingTab:
         self.dragging_handle = None
         self.drag_start_mouse_pos = None
         self.drag_start_bbox_processed = None
+        
+        # UI 요소
+        self.wait_message_label = None 
+        
 
         self._setup_ui()
 
     def _setup_ui(self):
+        
         """UI 구성"""
         top_frame = ttk.Frame(self.parent_tab)
         top_frame.pack(fill=tk.BOTH, expand=True)
@@ -124,9 +131,15 @@ class LabelingTab:
 
         self.control_canvas.bind('<Enter>', bind_mousewheel)
         self.control_canvas.bind('<Leave>', unbind_mousewheel)
-
+        
         # 컨트롤 패널 내용을 스크롤 가능한 프레임에 추가
         self._setup_control_panels(self.scrollable_frame)
+        
+        self.wait_message_label = ttk.Label(self.video_label, text="처리 중...",
+            font=("TkDefaultFont", 16, "bold"),
+            background="grey", foreground="white",
+            anchor=tk.CENTER, relief=tk.RAISED)
+        
         
         # 핫키 설정
         self._setup_hotkeys()
@@ -274,6 +287,18 @@ class LabelingTab:
         print("  Ctrl+S : 현재 프레임 저장")
         print("  Shift+← → : 자동 세그멘테이션 (이전/다음 프레임 bbox 참조)")
 
+    #--- wait message ---
+    def _show_wait_message(self, message="세그멘테이션 중..."):
+        if self.wait_message_label:
+            self.wait_message_label.config(text=message)
+            self.wait_message_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER, relwidth=0.7, relheight=0.2)
+            self.wait_message_label.lift()
+            self.video_label.update_idletasks() # 메시지가 즉시 보이도록 강제 업데이트
+
+    def _hide_wait_message(self):
+        if self.wait_message_label:
+            self.wait_message_label.place_forget()
+
     # === 핫키 이벤트 처리 ===
     def on_key_press(self, event):
         """일반 키 이벤트 처리"""
@@ -353,9 +378,11 @@ class LabelingTab:
         """Shift+Right: 다음 프레임 bbox 참조해서 자동 세그멘테이션"""
         if not self.is_video_loaded:
             return
-        self._auto_segmentation_with_reference(1)   # 다음 프레임
+        
+        threading.Thread(target=self._auto_segmentation_with_reference, args=(1,), daemon=True).start()
+        # self._auto_segmentation_with_reference(1)   # 다음 프레임
         return "break"
-
+        
     def _auto_segmentation_with_reference(self, frame_offset):
         """
         참조 프레임의 bbox를 기반으로 자동 세그멘테이션 수행
@@ -407,8 +434,9 @@ class LabelingTab:
         # 각 참조 bbox에 대해 자동 세그멘테이션 수행
         current_label_manager = self.get_current_label_manager()
         successful_count = 0
-        total_count = len(reference_labels)
+        # total_count = len(reference_labels)
 
+        self._show_wait_message("자동 세그멘테이션 중...")
         for ref_label in reference_labels:
             try:
                 ref_bbox = ref_label['bbox_processed']
@@ -426,10 +454,10 @@ class LabelingTab:
                     continue
 
                 # SAM 세그멘테이션 수행
-                mask, polygons, bbox = self.segmentation_processor.process_image(
-                    frame_processed, [center_x, center_y]
+                mask, polygons, bbox = self.segmentation_processor.process_image_sync(
+                    frame_processed, prompt_data=ref_bbox, prompt_type="bbox"
                 )
-
+                
                 if bbox is not None:
                     # 새 라벨 추가 (기존 클래스 정보 유지)
                     new_id = current_label_manager.add_label(
@@ -447,16 +475,12 @@ class LabelingTab:
                 print(f"자동 세그멘테이션 오류: {e}")
                 continue
 
+        self._hide_wait_message()
+        
         # 결과 표시
         direction_text = "이전" if frame_offset < 0 else "다음"
         if successful_count > 0:
             self.show_frame_and_labels(self.current_frame_number)
-            
-            # messagebox.showinfo(
-            #     "자동 세그멘테이션 완료", 
-            #     f"{direction_text} 프레임 참조 완료\n"
-            #     f"성공: {successful_count}개 / 전체: {total_count}개"
-            # )
             
         else:
             messagebox.showwarning(
@@ -650,7 +674,29 @@ class LabelingTab:
             self.clear_active_segmentation_data_internally()
             self.show_frame_and_labels(self.current_frame_number)
 
+
     # === 세그멘테이션 처리 ===
+    def _on_segmentation_complete(self,  mask, polygons, bbox, error, call_context):
+        print("callCackSegmentation called")
+        
+        self.current_active_mask_processed = mask
+        self.current_active_polygons_processed = polygons if polygons else []
+        self.current_active_bbox_processed = bbox
+        
+        self.selected_label_id_from_list = None
+        self.clear_listbox_selection()
+        self.set_add_update_button_text("새 라벨 추가")
+        
+        self.show_frame_and_labels(self.current_frame_number)
+        
+        #wait 대화창 닫기
+        self._hide_wait_message()
+        
+        if error:
+            print(f"세그멘테이션 오류: {error}")
+            messagebox.showerror("세그멘테이션 오류", f"오류 발생: {error}")
+        
+    
     def run_segmentation(self, event):
         if not self.is_video_loaded or not self.segmentation_processor.is_model_loaded():
             if self.is_video_loaded and not self.segmentation_processor.is_model_loaded():
@@ -673,18 +719,21 @@ class LabelingTab:
         self.clear_active_segmentation_data_internally()
         
         # SAM 처리
-        mask, polygons, bbox = self.segmentation_processor.process_image(frame_processed, [click_x, click_y])
+        #mask, polygons, bbox = self.segmentation_processor.process_image_sync(frame_processed, [click_x, click_y])
         
-        self.current_active_mask_processed = mask
-        self.current_active_polygons_processed = polygons if polygons else []
-        self.current_active_bbox_processed = bbox
+        self.segmentation_processor.process_image_async(
+            frame_processed, # 복사는 async 메서드 내부에서 처리
+            [click_x, click_y], 
+            "point",
+            self._on_segmentation_complete, # 콜백 함수
+            # 콜백에 전달될 컨텍스트 정보
+            call_context={'type': 'single_click', 'target_frame_num': self.current_frame_number}
+        )
         
-        self.selected_label_id_from_list = None
-        self.clear_listbox_selection()
-        self.set_add_update_button_text("새 라벨 추가")
+        # WAIT  대화창 
         
-        self.show_frame_and_labels(self.current_frame_number)
-
+        self._show_wait_message("세그멘테이션 중...")
+        
     def clear_active_segmentation_data_internally(self):
         """활성 세그멘테이션 데이터 초기화"""
         self.current_active_mask_processed = None
@@ -1058,8 +1107,9 @@ class LabelingTab:
             messagebox.showwarning("불러오기 오류", "먼저 비디오를 로드해주세요.")
             return
 
-        if self.app.frame_label_managers:
-            if not messagebox.askyesno("기존 데이터 확인", "기존 라벨 데이터가 있습니다. 덮어쓰시겠습니까?"):
+        # 수정 제안 코드 (실제 라벨 데이터가 하나라도 있는지 체크)
+        if self.app.frame_label_managers and any(manager.get_labels() for manager in self.app.frame_label_managers.values()):
+            if not messagebox.askyesno("기존 데이터 확인", "실제로 저장된 라벨 데이터가 있습니다. 덮어쓰시겠습니까?"): # 메시지 내용도 조금 더 명확하게 수정 가능
                 return
 
         filepath = filedialog.askopenfilename(
@@ -1139,9 +1189,19 @@ class LabelingTab:
             messagebox.showerror("불러오기 실패", f"라벨 데이터 불러오기 중 오류 발생:\n{e}")
 
     def export_all_frames_to_yolo(self):
-        """전체 프레임을 YOLO 형식으로 일괄 내보내기"""
+        """전체 프레임을 YOLO 형식으로 일괄 내보내기 (라벨이 있는 프레임만)"""
         if not self.app.frame_label_managers:
-            messagebox.showwarning("내보내기 오류", "내보낼 라벨 데이터가 없습니다.")
+            messagebox.showwarning("내보내기 오류", "내보낼 라벨 데이터가 (전체적으로) 없습니다.")
+            return
+
+        # 실제로 라벨이 있는 프레임만 필터링
+        labeled_frame_numbers = []
+        for frame_num, manager in self.app.frame_label_managers.items():
+            if manager and manager.get_labels(): # LabelManager가 존재하고, 라벨 목록이 비어있지 않은 경우
+                labeled_frame_numbers.append(frame_num)
+
+        if not labeled_frame_numbers:
+            messagebox.showwarning("내보내기 오류", "라벨이 지정된 프레임이 없습니다.")
             return
 
         # 출력 폴더 선택
@@ -1150,9 +1210,9 @@ class LabelingTab:
             return
 
         # 옵션 선택
-        from tkinter import simpledialog
+        from tkinter import simpledialog # 위치는 함수 상단이나 클래스 임포트 쪽으로 옮겨도 무방
         include_images = messagebox.askyesno(
-            "이미지 포함 여부", 
+            "이미지 포함 여부",
             "이미지 파일도 함께 내보내시겠습니까?\n\n"
             "예: 이미지 + 라벨 파일\n"
             "아니오: 라벨 파일만"
@@ -1160,109 +1220,131 @@ class LabelingTab:
 
         # 파일명 접두사 입력
         prefix = simpledialog.askstring(
-            "파일명 접두사", 
-            "파일명 접두사를 입력하세요:", 
+            "파일명 접두사",
+            "파일명 접두사를 입력하세요:",
             initialvalue=self.get_filename_prefix()
         )
-        if not prefix:
+        if not prefix: # 사용자가 취소하거나 빈 문자열 입력 시
             return
 
         # 진행 상황 표시 다이얼로그
         progress_window = tk.Toplevel(self.app.master)
         progress_window.title("YOLO 일괄 내보내기...")
         progress_window.geometry("450x150")
-        progress_window.transient(self.app.master)
-        progress_window.grab_set()
+        progress_window.transient(self.app.master) # 메인 창 위에 항상 표시
+        progress_window.grab_set() # 다른 창 비활성화 (모달처럼)
         
         progress_label = ttk.Label(progress_window, text="내보내기 준비 중...")
         progress_label.pack(pady=10)
         
-        progress_bar = ttk.Progressbar(progress_window, mode='determinate')
+        # 프로그레스바 최대값을 라벨이 있는 프레임 수로 설정
+        progress_bar = ttk.Progressbar(progress_window, mode='determinate', maximum=len(labeled_frame_numbers))
         progress_bar.pack(fill=tk.X, padx=20, pady=10)
         
+        # 취소 버튼 추가 (선택적이지만 좋은 UX)
+        # 이 취소를 실제로 동작하게 하려면, for 루프 내에서 플래그를 확인해야 합니다.
+        # 여기서는 progress_window.destroy()가 호출되면 winfo_exists()로 감지합니다.
         cancel_button = ttk.Button(progress_window, text="취소", command=progress_window.destroy)
         cancel_button.pack(pady=5)
 
         try:
-            # images와 labels 폴더 생성
-            import os
+            import os # os 모듈 임포트 위치 확인 (보통 파일 상단)
             labels_dir = os.path.join(output_dir, "labels")
             os.makedirs(labels_dir, exist_ok=True)
             
+            images_dir = None
             if include_images:
                 images_dir = os.path.join(output_dir, "images")
                 os.makedirs(images_dir, exist_ok=True)
 
-            # 내보낼 프레임 목록
-            frame_numbers = sorted(self.app.frame_label_managers.keys())
-            progress_bar.configure(maximum=len(frame_numbers))
-            
             exported_count = 0
             failed_count = 0
+            
+            # 정렬된 라벨 프레임 번호 목록 사용
+            frame_numbers_to_export = sorted(labeled_frame_numbers)
 
-            for i, frame_num in enumerate(frame_numbers):
-                if not progress_window.winfo_exists():  # 취소된 경우
-                    break
+            for i, frame_num in enumerate(frame_numbers_to_export):
+                if not progress_window.winfo_exists(): # 사용자가 진행률 창을 닫으면 중단
+                    messagebox.showinfo("취소됨", "내보내기 작업이 사용자에 의해 취소되었습니다.")
+                    # 원래 프레임으로 복구하는 로직은 finally 블록이나 여기서 명시적 호출 가능
+                    self.show_frame_and_labels(self.current_frame_number)
+                    return # 함수 종료
 
-                progress_label.config(text=f"프레임 {frame_num} 내보내는 중... ({i+1}/{len(frame_numbers)})")
-                progress_bar.configure(value=i)
-                progress_window.update()
+                progress_label.config(text=f"프레임 {frame_num} 내보내는 중... ({i+1}/{len(frame_numbers_to_export)})")
+                progress_bar.config(value=i + 1) # 0부터 시작하는 인덱스이므로 +1
+                progress_window.update_idletasks() # UI 강제 업데이트
 
                 try:
                     label_manager = self.app.frame_label_managers[frame_num]
                     
-                    # YOLO 형식 변환
+                    # YOLO 형식 변환 (get_labels()가 비어있지 않음은 위에서 보장됨)
                     yolo_strings = label_manager.to_yolo_format_strings(
                         self.PROCESSING_WIDTH, self.PROCESSING_HEIGHT
                     )
                     
-                    # 라벨 파일 저장
-                    filename = f"{prefix}_{frame_num:05d}"
-                    txt_filepath = os.path.join(labels_dir, f"{filename}.txt")
+                    # 라벨 파일 저장 (yolo_strings가 비어 있을 수 없음 - 라벨이 있는 프레임만 처리하므로)
+                    # 하지만 안전을 위해 비어있는 경우 빈 파일을 생성하도록 유지
+                    filename_base = f"{prefix}_{frame_num:05d}" # 공통 파일 이름 (확장자 제외)
+                    txt_filepath = os.path.join(labels_dir, f"{filename_base}.txt")
                     
                     with open(txt_filepath, 'w', encoding='utf-8') as f:
-                        if yolo_strings:
+                        if yolo_strings: # 이 조건은 항상 참이어야 함
                             f.write("\n".join(yolo_strings))
                         else:
-                            f.write("")  # 빈 파일
+                            # 이 경우는 발생하지 않아야 하지만, 방어적으로 빈 파일 생성
+                            f.write("") 
+                            print(f"Warning: 라벨이 있는 프레임({frame_num})으로 간주되었으나 YOLO 문자열이 비어있습니다.")
+
 
                     # 이미지 파일 저장 (옵션)
-                    if include_images:
-                        # 해당 프레임으로 이동하여 이미지 가져오기
-                        self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
-                        ret, frame = self.cap.read()
-                        
-                        if ret:
-                            # 처리 해상도로 변환
-                            processed_frame = self._resize_with_padding(frame, self.PROCESSING_WIDTH, self.PROCESSING_HEIGHT)
-                            img_filepath = os.path.join(images_dir, f"{filename}.jpg")
-                            cv2.imwrite(img_filepath, processed_frame)
+                    if include_images and images_dir: # images_dir도 확인
+                        if not self.cap or not self.cap.isOpened():
+                            print(f"Warning: 이미지 저장을 위해 비디오 캡처가 유효하지 않습니다 (프레임 {frame_num}).")
+                            # 이미지를 저장할 수 없는 경우 실패로 간주할지, 라벨만 저장하고 성공으로 간주할지 결정 필요
+                            # 여기서는 일단 라벨은 저장된 것으로 계속 진행
+                        else:
+                            self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
+                            ret, frame = self.cap.read()
+                            
+                            if ret:
+                                processed_frame = self._resize_with_padding(frame, self.PROCESSING_WIDTH, self.PROCESSING_HEIGHT)
+                                img_filepath = os.path.join(images_dir, f"{filename_base}.jpg")
+                                cv2.imwrite(img_filepath, processed_frame)
+                            else:
+                                print(f"Warning: 프레임 {frame_num}의 이미지를 읽는 데 실패했습니다.")
+                                # 이미지 저장 실패 시 처리 (예: failed_count에 포함 안 함, 라벨만 성공)
 
                     exported_count += 1
 
                 except Exception as e:
-                    print(f"프레임 {frame_num} 내보내기 실패: {e}")
+                    print(f"프레임 {frame_num} 내보내기 중 오류 발생: {e}")
                     failed_count += 1
-
-            progress_window.destroy()
-
-            # 원래 프레임으로 복구
-            self.show_frame_and_labels(self.current_frame_number)
-
-            # 결과 표시
-            if exported_count > 0:
-                message = f"YOLO 일괄 내보내기 완료\n\n"
-                message += f"성공: {exported_count}개\n"
-                message += f"실패: {failed_count}개\n"
-                message += f"출력 폴더: {output_dir}"
-                messagebox.showinfo("내보내기 완료", message)
-            else:
-                messagebox.showerror("내보내기 실패", "모든 프레임 내보내기에 실패했습니다.")
-
-        except Exception as e:
+            
+            # 루프 정상 종료 후 진행률 창 닫기 (사용자가 먼저 닫지 않았다면)
             if progress_window.winfo_exists():
                 progress_window.destroy()
-            messagebox.showerror("내보내기 오류", f"일괄 내보내기 중 오류 발생:\n{e}")
+
+            # 작업 완료 후, 현재 선택된 프레임으로 화면 복구 (필수)
+            self.show_frame_and_labels(self.current_frame_number)
+
+            # 최종 결과 표시
+            if exported_count > 0:
+                result_message = f"YOLO 일괄 내보내기 완료\n\n"
+                result_message += f"성공적으로 내보낸 프레임 수: {exported_count}개\n"
+                if failed_count > 0:
+                    result_message += f"내보내기 실패 프레임 수: {failed_count}개\n"
+                result_message += f"출력 폴더: {output_dir}"
+                messagebox.showinfo("내보내기 완료", result_message)
+            elif failed_count > 0 : # 성공은 없고 실패만 있는 경우
+                 messagebox.showerror("내보내기 실패", f"모든 프레임 내보내기에 실패했습니다. (실패: {failed_count}개)")
+            # else : exported_count == 0 and failed_count == 0 인 경우는 labeled_frame_numbers가 비어있을 때 이미 처리됨
+
+        except Exception as e: # try 블록의 최상위 예외 처리
+            if progress_window.winfo_exists():
+                progress_window.destroy()
+            messagebox.showerror("내보내기 중 심각한 오류", f"일괄 내보내기 중 예기치 않은 오류 발생:\n{e}")
+            # 이 경우에도 현재 프레임 복구
+            self.show_frame_and_labels(self.current_frame_number)
 
     def show_all_labels_statistics(self):
         """전체 라벨 통계 표시"""

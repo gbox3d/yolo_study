@@ -22,3 +22,11 @@ output/
 datasets/
 .vscode/
 config.yaml
+build/
+dist/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.spec
+*.egg-info/
